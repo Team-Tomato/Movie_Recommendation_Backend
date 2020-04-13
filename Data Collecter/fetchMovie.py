@@ -1,7 +1,14 @@
 import csv
 import json
 import requests
-from requests.auth import HTTPBasicAuth
+
+# Input:
+# data.csv --> movies name as a single column without header
+# 
+# Output:
+# result2.csv --> Extracted data
+# moviesnotFount.csv --> Movies which dont have data in omdb API
+
 
 with open('data.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -15,17 +22,21 @@ with open('data.csv') as csv_file:
         if len(responseData) == 0:
             print("null")
         else:
-            title = responseData['Title']
-            year = responseData['Year']          
-            genre = responseData['Genre']
-            director = responseData['Director']
-            write = responseData['Writer']
-            actor = responseData['Actors']
-            language = responseData['Language']
-            country = responseData['Country']
-            awards = responseData['Awards']
-            rating = responseData['imdbRating']
-
-            with open('result2.csv', 'a', newline='') as foptr:
-                writer = csv.writer(foptr)
-                writer.writerow([title,year,"",genre,director,write,actor,language,country,awards,rating])        
+            if(responseData['Response'] == 'True'):
+                title = responseData['Title']
+                year = responseData['Year']          
+                genre = responseData['Genre']
+                director = responseData['Director']
+                write = responseData['Writer']
+                actor = responseData['Actors']
+                language = responseData['Language']
+                country = responseData['Country']
+                awards = responseData['Awards']
+                rating = responseData['imdbRating']
+                with open('result2.csv', 'a', newline='') as foptr:
+                    writer = csv.writer(foptr)
+                    writer.writerow([title,year,"",genre,director,write,actor,language,country,awards,rating])        
+            else:
+                with open('moviesnotFount.csv', 'a', newline='') as foptr2:
+                    writer2 = csv.writer(foptr2)
+                    writer2.writerow([movie.replace("+"," ")])
