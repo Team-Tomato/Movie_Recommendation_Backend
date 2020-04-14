@@ -12,7 +12,7 @@ import requests
 
 print("Enter the year of the movie collection : ", end="")
 inputYear = int(input())
-with open('data.csv') as csv_file:
+with open('Movies2020.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     for row in csv_reader:
         movie = row[0]
