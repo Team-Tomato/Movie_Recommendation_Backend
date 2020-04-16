@@ -1,9 +1,9 @@
-#Upload file in Colab
+# Upload file in colab
 
 from google.colab import files
 uploaded = files.upload()
 
-# Cosine Similarity model
+# Cosine similarity model
 
 import io
 import pandas as pd
@@ -34,7 +34,7 @@ def get_title_from_index(index):
 def get_index_from_title(title):
     return df[df.Title == title]["Index"].values[0]
 
-movie_user_likes = "Oh My Kadavule"
+movie_user_likes = "Pattas"
 
 movie_index = int(get_index_from_title(movie_user_likes))
 
@@ -44,9 +44,8 @@ sorted_similar_movies = sorted(similar_movies,key=lambda x:x[1],reverse=True)[1:
 i=0
 
 print("Top 5 similar movies to "+movie_user_likes+" - Genre : "+df[df.Title==movie_user_likes]["Genre"].values+" are:\n")
-
-for movie in sorted_similar_movies:
-    print(get_title_from_index(movie[0]))
+for element in sorted_similar_movies:
+    print(get_title_from_index(element[0]))
     i=i+1
     if i>=5:
         break
