@@ -33,6 +33,10 @@ admin = Admin(app, name='Team Tomato Movie', template_mode='bootstrap3')
 #admin.add_view(ModelView(Model_Name, db.session))
 
 
+# Root
+@app.route('/')
+def root():
+    return "Welcome to Team-Tomato movie recommendation system"
 
 # Movie cosine API
 @app.route('/api/v1/movie/cosine', methods=['GET'])
