@@ -1,9 +1,9 @@
 # Movie_Recommendation_Backend
 Flask API serves movie recommendation.
 
-### Postman Collection : https://www.getpostman.com/collections/63a0dfc9ae6d2657ee29
+##### Postman Collection : https://www.getpostman.com/collections/63a0dfc9ae6d2657ee29
 
-### Deployed in heroku : https://movie-recommender-teamtomato.herokuapp.com
+##### Deployed in heroku : https://movie-recommender-teamtomato.herokuapp.com
 
 ### Setup for development
 1. Clone the repo to your local
