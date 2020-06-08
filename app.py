@@ -67,27 +67,31 @@ def cosineSimilarityModel():
 @app.route('/api/v1/movie/genre', methods=['GET'])
 def genreBased():
     try:
-    	# genre_str = request.args.get('search_str')
-        movie_user_likes = string.capwords(request.args.get('search_str'))
-        data = pd.DataFrame(pd.read_csv('dataset/moviedataset.csv'), columns=['Title', 'Genre', 'Plot'])
+        language = string.capwords(request.args.get('language'))
+        genre = string.capwords(request.args.get('genre'))
+        df1 = pd.read_csv('dataset/moviedataset.csv')
+        data = pd.DataFrame(df1, columns=['Title', 'Genre', 'IMDB rating', 'No_of_Rating', 'Language'])
+        data= data.copy().loc[data['Language'] ==language]
+        df = data.copy().loc[data['Genre'] ==genre]
+        df['No_of_Rating'] = pd.to_numeric(df['No_of_Rating'], errors='coerce')
 
-        data['Genre'] = data['Genre'].fillna('')
+        rating_mean = df['IMDB rating'].mean()
+        m = df['No_of_Rating'].quantile(0.5)
 
-        tfidf_matrix = TfidfVectorizer(stop_words='english').fit_transform(data['Genre'])
-        tfidf_matrix.shape
+        q_movies = df.copy().loc[df['No_of_Rating'] >= m]
 
-        # Compute the cosine similarity matrix
-        cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+        def weighted_rating(x, m=m, rating_mean=rating_mean):
+            v = x['No_of_Rating']
+            R = x['IMDB rating']
+            # Calculation based on the IMDB formula
+            return (v / (v + m) * R) + (m / (m + v) * rating_mean)
 
-        indices = pd.Series(data.index, index=data['Title']).drop_duplicates()
-
-        sim_scores = list(enumerate(cosine_sim[indices[movie_user_likes]]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-
-        movie_indices = [data['Title'].iloc[i[0]] for i in sim_scores[1:6]]
-        return jsonify(movie_indices)
+        q_movies['score'] = q_movies.apply(weighted_rating, axis=1)
+        q_movies = q_movies.sort_values('score', ascending=False).head(5)
+        lst = [i for i in q_movies['Title']]
+        return jsonify(lst)
     except Exception as e:
-        return(str(e))
+        return "No result found"
 
 @app.route('/api/v1/movie/rating')
 def ratingBased():
@@ -113,10 +117,11 @@ def ratingBased():
         lst = [i for i in q_movies['Title']]
         return jsonify(lst)
     except Exception as e:
-        return(str(e))
+        return "No result found"
+
 
 @app.route("/api/v1/github/contributors", methods=["GET"])
-def vicky():
+def getRepoDetails():
     g = Github()
     details=[]
     try:
