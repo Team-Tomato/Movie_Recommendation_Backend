@@ -121,7 +121,7 @@ def ratingBased():
 
 
 @app.route("/api/v1/github/contributors", methods=["GET"])
-def vicky():
+def getRepoDetails():
     g = Github()
     details=[]
     try:
