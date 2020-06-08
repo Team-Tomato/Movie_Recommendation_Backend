@@ -70,7 +70,7 @@ def genreBased():
         language = string.capwords(request.args.get('language'))
         genre = string.capwords(request.args.get('genre'))
         df1 = pd.read_csv('dataset/moviedataset.csv')
-        data = pd.DataFrame(df1, columns=['Title', 'Genre', 'IMDB rating', 'No_of_Rating'])
+        data = pd.DataFrame(df1, columns=['Title', 'Genre', 'IMDB rating', 'No_of_Rating', 'Language'])
         data= data.copy().loc[data['Language'] ==language]
         df = data.copy().loc[data['Genre'] ==genre]
         df['No_of_Rating'] = pd.to_numeric(df['No_of_Rating'], errors='coerce')
