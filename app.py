@@ -92,6 +92,7 @@ def genreBased():
         return jsonify(lst)
     except Exception as e:
         return "No result found"
+
 @app.route('/api/v1/movie/rating')
 def ratingBased():
     try:
@@ -117,6 +118,7 @@ def ratingBased():
         return jsonify(lst)
     except Exception as e:
         return "No result found"
+
 
 @app.route("/api/v1/github/contributors", methods=["GET"])
 def vicky():
