@@ -9,8 +9,14 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+from logging.handlers import RotatingFileHandler
+from flask import Flask, request, jsonify
+from time import strftime
 from github import Github
 import os,requests,json
+import logging
+import traceback
+
 
 app = Flask(__name__)
 CORS(app)
@@ -32,11 +38,14 @@ admin = Admin(app, name='Team Tomato Movie', template_mode='bootstrap3')
 #Flask admin model views
 #admin.add_view(ModelView(Model_Name, db.session))
 
+#Creating a logger object
+logger = logging.getLogger(__name__)
 
 # Root
 @app.route('/')
 def root():
     return "Welcome to Team-Tomato movie recommendation system"
+
 
 # Movie cosine API
 @app.route('/api/v1/movie/cosine', methods=['GET'])
@@ -67,31 +76,27 @@ def cosineSimilarityModel():
 @app.route('/api/v1/movie/genre', methods=['GET'])
 def genreBased():
     try:
-        language = string.capwords(request.args.get('language'))
-        genre = string.capwords(request.args.get('genre'))
-        df1 = pd.read_csv('dataset/moviedataset.csv')
-        data = pd.DataFrame(df1, columns=['Title', 'Genre', 'IMDB rating', 'No_of_Rating', 'Language'])
-        data= data.copy().loc[data['Language'] ==language]
-        df = data.copy().loc[data['Genre'] ==genre]
-        df['No_of_Rating'] = pd.to_numeric(df['No_of_Rating'], errors='coerce')
+    	# genre_str = request.args.get('search_str')
+        movie_user_likes = string.capwords(request.args.get('search_str'))
+        data = pd.DataFrame(pd.read_csv('dataset/moviedataset.csv'), columns=['Title', 'Genre', 'Plot'])
 
-        rating_mean = df['IMDB rating'].mean()
-        m = df['No_of_Rating'].quantile(0.5)
+        data['Genre'] = data['Genre'].fillna('')
 
-        q_movies = df.copy().loc[df['No_of_Rating'] >= m]
+        tfidf_matrix = TfidfVectorizer(stop_words='english').fit_transform(data['Genre'])
+        tfidf_matrix.shape
 
-        def weighted_rating(x, m=m, rating_mean=rating_mean):
-            v = x['No_of_Rating']
-            R = x['IMDB rating']
-            # Calculation based on the IMDB formula
-            return (v / (v + m) * R) + (m / (m + v) * rating_mean)
+        # Compute the cosine similarity matrix
+        cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 
-        q_movies['score'] = q_movies.apply(weighted_rating, axis=1)
-        q_movies = q_movies.sort_values('score', ascending=False).head(5)
-        lst = [i for i in q_movies['Title']]
-        return jsonify(lst)
+        indices = pd.Series(data.index, index=data['Title']).drop_duplicates()
+
+        sim_scores = list(enumerate(cosine_sim[indices[movie_user_likes]]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+
+        movie_indices = [data['Title'].iloc[i[0]] for i in sim_scores[1:6]]
+        return jsonify(movie_indices)
     except Exception as e:
-        return "No result found"
+        return(str(e))
 
 @app.route('/api/v1/movie/rating')
 def ratingBased():
@@ -117,11 +122,10 @@ def ratingBased():
         lst = [i for i in q_movies['Title']]
         return jsonify(lst)
     except Exception as e:
-        return "No result found"
-
+        return(str(e))
 
 @app.route("/api/v1/github/contributors", methods=["GET"])
-def getRepoDetails():
+def vicky():
     g = Github()
     details=[]
     try:
@@ -139,5 +143,35 @@ def getRepoDetails():
     except Exception as e:
         return(str(e))
 
+@app.after_request
+def after_request(response):
+    if response.status_code != 500:
+        ts = strftime('[%Y-%b-%d %H:%M]')
+        logger.error('%s %s %s %s %s %s',
+                      ts,
+                      request.remote_addr,
+                      request.method,
+                      request.scheme,
+                      request.full_path,
+                      response.status)
+    return response
+
+
+@app.errorhandler(Exception)
+def exceptions(e):
+    ts = strftime('[%Y-%b-%d %H:%M]')
+    tb = traceback.format_exc()
+    logger.error('%s %s %s %s %s 5xx INTERNAL SERVER ERROR\n%s',
+                  ts,
+                  request.remote_addr,
+                  request.method,
+                  request.scheme,
+                  request.full_path,
+                  tb)
+    return "Internal Server Error", 500
+
 if __name__ == '__main__':
+    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=0)
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(handler)
     app.run()
