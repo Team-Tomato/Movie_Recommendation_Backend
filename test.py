@@ -7,7 +7,6 @@ class TestRoutes(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
         app.config['TESTING'] = True
-        app.config['DEBUG'] = True
 
 
     def tearDown(self):
@@ -21,13 +20,6 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, b'Welcome to Team-Tomato movie recommendation system')
 
-
-    # Check for Negative Response
-    def test_index1(self):
-        tester = app.test_client(self)
-        response = tester.get('/index', content_type='application/json')
-        self.assertEqual(response.status_code, 500)
-
     
 #  Testing Cosine Similarity Model
     #Checking Response Status Code is 200
@@ -36,13 +28,12 @@ class TestRoutes(unittest.TestCase):
         response = tester.get('/api/v1/movie/cosine', content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
-    #Checking for Negative Response
-    def test_cosineSimilarity1(self):
+    #Checking for Response Data
+    def test_cosine(self):
         tester = app.test_client(self)
-        response = tester.get('/api/v1/movie/cosine/1', content_type='application/json')
-        self.assertEqual(response.status_code, 500)
-
-
+        response = tester.get('/api/v1/movie/cosine', content_type='application/json')
+        self.assertEqual(b'No results found', response.data)
+   
 # Testing Genre Based Route
     #Checking Response Status Code is 200
     def test_genreBased(self):
@@ -50,12 +41,13 @@ class TestRoutes(unittest.TestCase):
         response = tester.get('/api/v1/movie/genre', content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
-    #Checking  for Negative Response 
-    def test_genreBased1(self):
+    #Checking for Response Data
+    def test_genre(self):
         tester = app.test_client(self)
-        response = tester.get('/api/v1/movie/genre/Action', content_type='application/json')
-        self.assertEqual(response.status_code, 500)
+        response = tester.get('/api/v1/movie/genre', content_type='application/json')
+        self.assertTrue(b'no attribute'in response.data)
 
+   
 
 # Testing Rating Based Route
     #Checking Response Status Code is 200
@@ -64,12 +56,7 @@ class TestRoutes(unittest.TestCase):
         response = tester.get('/api/v1/movie/rating', content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
-    #Checking for Negative Response 
-    def test_ratingBased1(self):
-        tester = app.test_client(self)
-        response = tester.get('/api/v1/movie/rating/9', content_type='application/json')
-        self.assertEqual(response.status_code, 500)
-
+   
 
 
 
